@@ -18,9 +18,7 @@ namespace Deps_CleanArchitecture.Infrastructure.Identity
                 authOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(bearerOptions =>
             {
-                Console.WriteLine("JWT_ISSUER: " + AmbienteUtil.GetValue("JWT_ISSUER"));
-                Console.WriteLine("JWT_AUDIENCE: " + AmbienteUtil.GetValue("JWT_AUDIENCE"));
-                Console.WriteLine("JWT_KEY: " + AmbienteUtil.GetValue("JWT_KEY"));
+                
                 bearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

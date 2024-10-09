@@ -7,6 +7,7 @@ using Deps_CleanArchitecture.SharedKernel.Util;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
 
 namespace Deps_CleanArchitecture.Infrastructure
 {
@@ -14,14 +15,15 @@ namespace Deps_CleanArchitecture.Infrastructure
     {
         public static void AddDbContext(this IServiceCollection services)
         {
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(AmbienteUtil.GetValue("POSTGRES_CONNECTION")));
-            services.AddDbContext<IdentityContext>(options =>
-                options.UseNpgsql(AmbienteUtil.GetValue("POSTGRES_CONNECTION")));
+            // Configurar a conexão do MongoDB
+            var mongoConnectionString = AmbienteUtil.GetValue("MONGO_CONNECTION");
+            var mongoDatabaseName = AmbienteUtil.GetValue("MONGO_DATABASE");
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<IdentityContext>()
-                .AddDefaultTokenProviders();
+            services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
+            services.AddSingleton<IMongoDatabase>(sp =>
+                sp.GetRequiredService<IMongoClient>().GetDatabase(mongoDatabaseName));
+            
+            services.AddScoped<MongoDbContext>();
         }
 
         public static void ConfigureJwt(this IServiceCollection services) 
