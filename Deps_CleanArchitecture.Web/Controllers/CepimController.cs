@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Deps_CleanArchitecture.Core.DTO;
 using Deps_CleanArchitecture.Core.Interfaces;
@@ -33,7 +34,8 @@ public class CepimController : ControllerBase
         {
             return BadRequest("CNPJ inválido.");
         }
-
+        
+        
         var response = await _CepimService.BuscarCepim(pesquisa.Documento);
 
         if (response.CodigoHttp == HttpStatusCode.OK)

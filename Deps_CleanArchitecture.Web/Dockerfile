@@ -9,9 +9,6 @@ ENV LC_ALL="pt_BR.UTF-8"
 ENV JWT_ISSUER="localhost:5151"
 ENV JWT_AUDIENCE="localhost:4200"
 ENV JWT_KEY="jfRVHqN7HJExsDokHJRA85tt4QexDeWT"
-# Adicione as variáveis do MongoDB
-ENV MONGO_CONNECTION="mongodb://mongodb:mongodb@localhost:27017/?authSource=admin" 
-ENV MONGO_DATABASE = "mongodb"
 RUN sed -i -e 's/# pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/' /etc/locale.gen
 RUN dpkg-reconfigure --frontend=noninteractive locales
 RUN locale-gen
