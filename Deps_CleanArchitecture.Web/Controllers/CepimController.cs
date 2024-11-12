@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Deps_CleanArchitecture.Core.DTO;
 using Deps_CleanArchitecture.Core.Interfaces;
@@ -19,7 +18,8 @@ public class CepimController : ControllerBase
     private readonly ICepimService _CepimService;
     private readonly MongoDbContext _MongoDbContext;
 
-    public CepimController(ICepimService cepimService, MongoDbContext mongoDbContext){
+    public CepimController(ICepimService cepimService, MongoDbContext mongoDbContext)
+    {
         _CepimService = cepimService;
         _MongoDbContext = mongoDbContext;
     }
@@ -30,50 +30,40 @@ public class CepimController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> BuscarCepim([FromQuery] ConsultaCepim pesquisa)
     {
-        if (!ValidadeCNPJ.IsValid(pesquisa.Documento))
-        {
-            return BadRequest("CNPJ inválido.");
-        }
-        
-        
+        if (!ValidadeCNPJ.IsValid(pesquisa.Documento)) return BadRequest("CNPJ inválido.");
+
+
         var response = await _CepimService.BuscarCepim(pesquisa.Documento);
 
-        if (response.CodigoHttp == HttpStatusCode.OK)
+        if (response.CodigoHttp != HttpStatusCode.OK) return StatusCode((int)response.CodigoHttp, response.ErroRetorno);
+
+        try
         {
-            try
-            {
-                Console.WriteLine("Iniciando o mapeamento dos dados de retorno.");
-                var cepimModels = CepimMapper.MapToCepimModelList(response.DadosRetorno);
-                
-                // Create ConsultaData model with request and response data
-                var consultaData = new ConsultaData
-                {
-                    Documento = pesquisa.Documento,
-                    Id_Produto = pesquisa.Id_Produto,
-                    Id_User = pesquisa.Id_User,
-                    Id_Cliente = pesquisa.Id_Cliente,
-                    Id_Provedor = pesquisa.Id_Provedor,
-                    Resposta = cepimModels
-                };
+            Console.WriteLine("Iniciando o mapeamento dos dados de retorno.");
+            var cepimModels = CepimMapper.MapToCepimModelList(response.DadosRetorno);
 
-                // Save ConsultaData model in MongoDB
-                Console.WriteLine("Iniciando o salvamento no MongoDB.");
-                await _MongoDbContext.SalvarConsulta(consultaData);
-                Console.WriteLine("Salvamento concluído.");
-
-                return Ok(response.DadosRetorno);
-            }
-            catch (Exception ex)
+            // Create ConsultaData model with request and response data
+            var consultaData = new ConsultaData
             {
-                Console.WriteLine($"Erro ao salvar os dados no MongoDB: {ex.Message}");
-                return StatusCode(500, "Erro ao salvar os dados.");
-            }
+                Documento = pesquisa.Documento,
+                Id_Produto = pesquisa.Id_Produto,
+                Id_User = pesquisa.Id_User,
+                Id_Cliente = pesquisa.Id_Cliente,
+                Id_Provedor = pesquisa.Id_Provedor,
+                Resposta = cepimModels
+            };
+
+            // Save ConsultaData model in MongoDB
+            Console.WriteLine("Iniciando o salvamento no MongoDB.");
+            await _MongoDbContext.SalvarConsulta(consultaData);
+            Console.WriteLine("Salvamento concluído.");
+
+            return Ok(response.DadosRetorno);
         }
-        else
+        catch (Exception ex)
         {
-            return StatusCode((int)response.CodigoHttp, response.ErroRetorno);
+            Console.WriteLine($"Erro ao salvar os dados no MongoDB: {ex.Message}");
+            return StatusCode(500, "Erro ao salvar os dados.");
         }
     }
-
-
 }
